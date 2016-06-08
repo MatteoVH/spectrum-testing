@@ -1,0 +1,64 @@
+textarea {
+	border: 2px solid #cccccc;
+	font-family: monospace;
+	resize: none;
+	font-size: 16px;
+}
+
+#testCode {
+	position: absolute;
+	width: 50%;
+	height: 50%;
+
+	left: 0%;
+	top: 0%;
+}
+
+#testCode textarea {
+	width: 100%;
+	height: 100%;
+}
+
+#testParameters {
+	position: absolute;
+	width: 50%;
+	height: 50%;
+
+	left: 0%;
+	top: 50%;
+}
+
+#testParameters textarea {
+	width: 100%;
+	height: 100%;
+}
+
+#results {
+	position: absolute;
+	width: 50%;
+	height: 80%;
+	
+	left: 50%;
+	top: 0%;
+}
+
+#resultsChart {
+	width: 100%;
+	height: 100%;
+	margin: auto;
+}
+
+#errors {
+	position: absolute;
+	width: 50%;
+	height: 20%;
+
+	text-align: center;
+	left: 50%;
+	top: 80%;
+}
+
+#errors h1 {
+	color: red;
+	font-family: helvetica, sans;
+}
