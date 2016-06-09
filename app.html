@@ -3,14 +3,19 @@
 	<link href="app.css" type="text/css" rel="stylesheet"/>
 
 	<div id="testCode">
-		<textarea>x => { return x^2; }</textarea>
+		<textarea>x => { 
+	return x.reduce( 
+		(prev, current) => { return prev + current; }
+	);
+}</textarea>
 	</div>
 
 	<div id="testParameters">
-		<textarea>"inputType": "number"
+		<textarea>"inputType": [{"type": "number"}]
 "distributionType": "linear"
 "rangeBottom": -15
-"rangeTop": 15</textarea>
+"rangeTop": 15
+"testIterations": 1000</textarea>
 	</div>
 
 	<div id="results">
