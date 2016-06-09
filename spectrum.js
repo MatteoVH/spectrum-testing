@@ -1,6 +1,6 @@
 'use strict';
 
-const testIterations = 1000;
+let testIterations = 1000;
 
 function generateRandomBool() {
 	return Math.random() >= 0.5;
@@ -11,11 +11,12 @@ function generatePositiveFloat(min = 0, max = Number.MAX_SAFE_INTEGER) {
 	return Math.random() * range + min;
 }
 
-function generateFloat() {
-	if(generateRandomBool())
-		return generatePositiveFloat() * -1;
-	else
-		return generatePositiveFloat();
+function generateFloat(min = Number.MAX_SAFE_INTEGER / 3 * -1, max = Number.MAX_SAFE_INTEGER / 3) {
+	return Math.random() * (max - min) + min;
+}
+
+function generateInt(min = Number.MAX_SAFE_INTEGER * -1, max = Number.MAX_SAFE_INTEGER) {
+	return Math.floor(generateFloat(min, max));
 }
 
 function* generateLinearFloat(rangeBottom = -25, rangeTop = 25) {
@@ -70,38 +71,90 @@ function* generateExponentialInt(rangeBottom = 0, rangeTop = 25) {
 		yield Math.floor(nextNumber.value);
 		nextNumber = generator.next();
 	}
-
 }
 
-function test(func, testParams) {
-	let generator;
-	
-	//decide generator
-	if (testParams.inputType === "number" || testParams.inputType === undefined) {
-		if (testParams.distributionType === "linear" || testParams.distributionType === undefined)
-			generator = generateLinearFloat(testParams.rangeBottom, testParams.rangeTop);
-		else if (testParams.distributionType === "exponential")
-			generator = generateExponentialFloat(testParams.rangeBottom, testParams.rangeTop);
-	} else if (testParams.inputType === "integer") {
-		if (testParams.distributionType === "linear" || testParams.distributionType === undefined)
-			generator = generateLinearInt(testParams.rangeBottom, testParams.rangeTop);
-		else if (testParams.distributionType === "exponential")
-			generator = generateExponentialInt(testParams.rangeBottom, testParams.rangeTop);
+function* generateArray(type = [{"type": "number"}], options) {
+
+	const generators = type.map( elem => {
+		if (elem.type === "number")
+			return generateFloat.bind(null, elem.min, elem.max);
+		else if (elem.type === "integer")
+			return generateInt.bind(null, elem.min, elem.max);
+		else if (elem.type === "boolean")
+			return generateRandomBool;
+		else //we didn't find a matching string so default to a float
+			return generateFloat;
+	});
+
+	let iterations = 0;
+
+	let array = [];
+
+	if (options.rangeBottom > 0) {
+		while (array.length < options.rangeBottom) {
+			array = [...array, generators[iterations % generators.length]()];
+			iterations++;
+		}
 	}
-			
+		
+
+	while (iterations <= testIterations && iterations <= options.rangeTop) {
+		yield array;
+		array = [...array, generators[iterations % generators.length]()];
+		iterations++;
+	}
+}
+
+function getGenerator(type = "number", options) {
+
+	if (type === "number") {
+		if (options.distributionType === "linear" || options.distributionType === undefined)
+			return generateLinearFloat(options.rangeBottom, options.rangeTop);
+		else if (options.distributionType === "exponential")
+			return generateExponentialFloat(options.rangeBottom, options.rangeTop);
+	} else if (type === "integer") {
+		if (options.distributionType === "linear" || options.distributionType === undefined)
+			return generateLinearInt(options.rangeBottom, options.rangeTop);
+		else if (options.distributionType === "exponential")
+			return generateExponentialInt(options.rangeBottom, options.rangeTop);
+	} else if (Array.isArray(type)) {
+		return generateArray(type, options);
+	}
+}	
+
+
+function test(func, testParams) {
+	if (testParams.testIterations)
+		testIterations = testParams.testIterations;
+
+	const generator = getGenerator(testParams.inputType, testParams);
+
 	let testCases = [];
+
+	let testLabels = [];
 
 	let nextVal = generator.next();
 
 	while(!nextVal.done) {
 		testCases.push({
-			x: nextVal.value
+			x: nextVal.value 
 		});
+
+		if (Array.isArray(nextVal.value))
+			testLabels.push(nextVal.value.length);
+		else
+			testLabels.push(nextVal.value);
+
 		nextVal = generator.next();
 	}
 
-	const results = testCases.map( (testCase) => {
-		testCase.y = func(testCase.x);
+	const results = testCases.map( (testCase, index) => {
+		try {
+			testCase.y = func(testCase.x);
+		} catch (error) {
+			$('#errors h1').html('Index ' + index + ': ' + error);
+		}
+		testCase.x = testLabels[index];
 		return testCase;
 	});
 
